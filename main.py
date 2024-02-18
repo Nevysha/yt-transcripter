@@ -1,11 +1,12 @@
 import os
+from pytube import YouTube
 from moviepy.editor import *
 import whisper
 from openai import OpenAI
 
 
 def main():
-    from pytube import YouTube
+
     yt = YouTube('https://www.youtube.com/watch?v=m0FLBbdvThY')
     yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first().download(
         'video.mp4')
