@@ -14,7 +14,7 @@ This is a simple example of how to use the Whisper and LMStudio libraries to pro
 # Requirements
 `choco install ffmpeg` # Windows
 
-`pip install whisper`
+`pip install openai-whisper`
 
 `pip install moviepy`
 
