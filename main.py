@@ -8,8 +8,9 @@ from openai import OpenAI
 def main():
 
     yt = YouTube('https://www.youtube.com/watch?v=m0FLBbdvThY')
-    yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first().download(
-        'video.mp4')
+    yt.streams.filter(progressive=True, file_extension='mp4')\
+        .order_by('resolution').desc().first()\
+        .download(filename='video.mp4')
 
     video = VideoFileClip(os.path.join("video.mp4"))
     video.audio.write_audiofile(os.path.join("movie_sound.mp3"))
