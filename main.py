@@ -28,7 +28,7 @@ def main(video_url):
     print(f' The text in video: \n {transcription}')
 
     with open(transcription_filename, 'w') as file:
-        file.write(transcription)
+        file.write(transcription + '\n')
 
     # Point to a local LMStudio server.
     client = OpenAI(base_url='http://localhost:1234/v1', api_key='not-needed')
@@ -47,7 +47,7 @@ def main(video_url):
 
     # Store the summary in a file.
     with open(summary_filename, 'w') as file:
-        file.write(completion.choices[0].message.content)
+        file.write(completion.choices[0].message.content + '\n')
 
 
 if __name__ == '__main__':
