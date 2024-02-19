@@ -3,45 +3,56 @@ from pytube import YouTube
 from moviepy.editor import *
 import whisper
 from openai import OpenAI
+import argparse
 
 
-def main():
+def main(video_url):
 
-    yt = YouTube('https://www.youtube.com/watch?v=m0FLBbdvThY')
-    yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first().download(
-        'video.mp4')
+    yt = YouTube(video_url)
+    video_id = yt.vid_info['videoDetails']['videoId']
+    video_filename = f'{video_id}.mp4'
+    audio_filename = f'{video_id}.mp3'
+    transcription_filename = f'{video_id}-transcription.txt'
+    summary_filename = f'{video_id}-summary.txt'
 
-    video = VideoFileClip(os.path.join("video.mp4"))
-    video.audio.write_audiofile(os.path.join("movie_sound.mp3"))
+    yt.streams.filter(progressive=True, file_extension='mp4')\
+        .order_by('resolution').desc().first()\
+        .download(filename=video_filename)
 
-    model = whisper.load_model("medium")
-    audio = whisper.load_audio("movie_sound.mp3")
-    result = model.transcribe('movie_sound.mp3')
-    print(f' The text in video: \n {result["text"]}')
+    video = VideoFileClip(video_filename)
+    video.audio.write_audiofile(audio_filename)
 
-    with open("result.txt", "w") as file:
-        file.write(result["text"])
+    model = whisper.load_model('medium')
+    result = model.transcribe(audio_filename)
+    transcription = result['text']
+    print(f' The text in video: \n {transcription}')
 
-    # Server running locally on LMStudio
-    # Point to the local server
-    client = OpenAI(base_url="http://localhost:1234/v1", api_key="not-needed")
+    with open(transcription_filename, 'w') as file:
+        file.write(transcription + '\n')
+
+    # Point to a local LMStudio server.
+    client = OpenAI(base_url='http://localhost:1234/v1', api_key='not-needed')
 
     completion = client.chat.completions.create(
-        model="local-model",  # this field is currently unused
+        model='local-model',  # This field is currently unused.
         messages=[
-            {"role": "system",
-             "content": "You are a helpful assistant in charge of summarizing huge transcript of video. I will provide you with the text of the video. You will summarize it while keeping interesting informations. Keep the language as it is in the video."},
-            {"role": "user", "content": "The text in video: \n" + result["text"]},
+            {'role': 'system',
+             'content': 'You are a helpful assistant in charge of summarizing huge transcript of video. I will provide you with the text of the video. You will summarize it while keeping interesting informations. Keep the language as it is in the video.'},
+            {'role': 'user', 'content': 'The text in video: \n' + transcription},
         ],
         temperature=0.7,
     )
 
     print(completion.choices[0].message)
 
-    # store the result in a file
-    with open("result_summary.txt", "w") as file:
-        file.write(completion.choices[0].message.content)
+    # Store the summary in a file.
+    with open(summary_filename, 'w') as file:
+        file.write(completion.choices[0].message.content + '\n')
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Download a YouTube video, extract its audio, transcribe it, and summarize it.')
+    parser.add_argument('video_url')
+    args = parser.parse_args()
+
+    main(args.video_url)
