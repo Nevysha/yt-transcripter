@@ -3,11 +3,12 @@ from pytube import YouTube
 from moviepy.editor import *
 import whisper
 from openai import OpenAI
+import argparse
 
 
-def main():
+def main(video_url):
 
-    yt = YouTube('https://www.youtube.com/watch?v=m0FLBbdvThY')
+    yt = YouTube(video_url)
     video_id = yt.vid_info['videoDetails']['videoId']
     video_filename = f'{video_id}.mp4'
     audio_filename = f'{video_id}.mp3'
@@ -50,4 +51,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Download a YouTube video, extract its audio, transcribe it, and summarize it.')
+    parser.add_argument('video_url')
+    args = parser.parse_args()
+
+    main(args.video_url)
