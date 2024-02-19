@@ -18,10 +18,11 @@ def main():
     model = whisper.load_model("medium")
     audio = whisper.load_audio("movie_sound.mp3")
     result = model.transcribe('movie_sound.mp3')
-    print(f' The text in video: \n {result["text"]}')
+    transcription = result['text']
+    print(f' The text in video: \n {transcription}')
 
     with open("result.txt", "w") as file:
-        file.write(result["text"])
+        file.write(transcription)
 
     # Server running locally on LMStudio
     # Point to the local server
@@ -32,7 +33,7 @@ def main():
         messages=[
             {"role": "system",
              "content": "You are a helpful assistant in charge of summarizing huge transcript of video. I will provide you with the text of the video. You will summarize it while keeping interesting informations. Keep the language as it is in the video."},
-            {"role": "user", "content": "The text in video: \n" + result["text"]},
+            {"role": "user", "content": "The text in video: \n" + transcription},
         ],
         temperature=0.7,
     )
