@@ -8,42 +8,46 @@ from openai import OpenAI
 def main():
 
     yt = YouTube('https://www.youtube.com/watch?v=m0FLBbdvThY')
+    video_id = yt.vid_info['videoDetails']['videoId']
+    video_filename = f'{video_id}.mp4'
+    audio_filename = f'{video_id}.mp3'
+    transcription_filename = f'{video_id}-transcription.txt'
+    summary_filename = f'{video_id}-summary.txt'
+
     yt.streams.filter(progressive=True, file_extension='mp4')\
         .order_by('resolution').desc().first()\
-        .download(filename='video.mp4')
+        .download(filename=video_filename)
 
-    video = VideoFileClip(os.path.join("video.mp4"))
-    video.audio.write_audiofile(os.path.join("movie_sound.mp3"))
+    video = VideoFileClip(video_filename)
+    video.audio.write_audiofile(audio_filename)
 
-    model = whisper.load_model("medium")
-    audio = whisper.load_audio("movie_sound.mp3")
-    result = model.transcribe('movie_sound.mp3')
+    model = whisper.load_model('medium')
+    result = model.transcribe(audio_filename)
     transcription = result['text']
     print(f' The text in video: \n {transcription}')
 
-    with open("result.txt", "w") as file:
+    with open(transcription_filename, 'w') as file:
         file.write(transcription)
 
-    # Server running locally on LMStudio
-    # Point to the local server
-    client = OpenAI(base_url="http://localhost:1234/v1", api_key="not-needed")
+    # Point to a local LMStudio server.
+    client = OpenAI(base_url='http://localhost:1234/v1', api_key='not-needed')
 
     completion = client.chat.completions.create(
-        model="local-model",  # this field is currently unused
+        model='local-model',  # This field is currently unused.
         messages=[
-            {"role": "system",
-             "content": "You are a helpful assistant in charge of summarizing huge transcript of video. I will provide you with the text of the video. You will summarize it while keeping interesting informations. Keep the language as it is in the video."},
-            {"role": "user", "content": "The text in video: \n" + transcription},
+            {'role': 'system',
+             'content': 'You are a helpful assistant in charge of summarizing huge transcript of video. I will provide you with the text of the video. You will summarize it while keeping interesting informations. Keep the language as it is in the video.'},
+            {'role': 'user', 'content': 'The text in video: \n' + transcription},
         ],
         temperature=0.7,
     )
 
     print(completion.choices[0].message)
 
-    # store the result in a file
-    with open("result_summary.txt", "w") as file:
+    # Store the summary in a file.
+    with open(summary_filename, 'w') as file:
         file.write(completion.choices[0].message.content)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
